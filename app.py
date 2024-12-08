@@ -1,110 +1,153 @@
 from flask import Flask, render_template, request
-from tabulate import tabulate
 
 app = Flask(__name__)
-app.run(host="0.0.0.0", port=8080)
-app.secret_key = 'your_secret_key'
 
-# Disease detection logic
-def detect_diseases(data):
-    at_risk = []
-    possibly_at_risk = []
-    not_detected = []
-
-    if data.get("systolic_bp") > 140 or data.get("diastolic_bp") > 90:
-        at_risk.append("Hypertension (High BP) - a risk factor for heart disease and stroke")
-    else:
-        not_detected.append("Hypertension (High BP)")
-
-    if data.get("fasting_glucose") > 125 or data.get("hba1c") > 6.5:
-        at_risk.append("Diabetes - a risk factor for multiple complications")
-    elif 100 < data.get("fasting_glucose") <= 125 or 5.7 <= data.get("hba1c") <= 6.5:
-        possibly_at_risk.append("Diabetes - prediabetes stage detected")
-    else:
-        not_detected.append("Diabetes")
-
-    if data.get("cholesterol") > 240:
-        at_risk.append("Hypercholesterolemia - linked to heart disease")
-    elif 200 < data.get("cholesterol") <= 240:
-        possibly_at_risk.append("Hypercholesterolemia - borderline levels detected")
-    else:
-        not_detected.append("Hypercholesterolemia")
-
-    if data.get("bmi") > 30:
-        at_risk.append("Obesity - a risk factor for various diseases")
-    elif 25 <= data.get("bmi") <= 30:
-        possibly_at_risk.append("Overweight - approaching obesity")
-    else:
-        not_detected.append("Obesity")
-
-    if data.get("age") > 50 and data.get("smoking_status") == "yes":
-        at_risk.append("Chronic Obstructive Pulmonary Disease (COPD)")
-    else:
-        not_detected.append("Chronic Obstructive Pulmonary Disease (COPD)")
-
-    if data.get("family_history_cancer") == "yes" and data.get("smoking_status") == "yes":
-        at_risk.append("Cancer - higher risk due to lifestyle and family history")
-    else:
-        not_detected.append("Cancer")
-
-    if data.get("age") > 60 and data.get("smoking_status") == "yes" and data.get("cholesterol") > 240:
-        at_risk.append("Heart Disease")
-    else:
-        not_detected.append("Heart Disease")
-
-    if data.get("kidney_function") < 60:
-        at_risk.append("Chronic Kidney Disease")
-    elif 60 <= data.get("kidney_function") < 90:
-        possibly_at_risk.append("Chronic Kidney Disease - mildly reduced function")
-    else:
-        not_detected.append("Chronic Kidney Disease")
-
-    if data.get("smoking_status") == "yes" or data.get("air_pollution_exposure") == "yes":
-        possibly_at_risk.append("Lower Respiratory Infections or Respiratory Disease")
-    else:
-        not_detected.append("Lower Respiratory Infections or Respiratory Disease")
-
-    if data.get("immunization_status") == "no":
-        at_risk.append("Preventable Infectious Diseases")
-    else:
-        not_detected.append("Preventable Infectious Diseases")
-
-    return at_risk, possibly_at_risk, not_detected
-
-# Flask routes
+# Route to display the index page (the form)
 @app.route('/')
-def home():
+def index():
     return render_template('index.html')
 
+# Route to handle form submission and display results
 @app.route('/result', methods=['POST'])
 def result():
-    health_data = {
-        "age": int(request.form.get("age", 0)),
-        "systolic_bp": int(request.form.get("systolic_bp", 0)),
-        "diastolic_bp": int(request.form.get("diastolic_bp", 0)),
-        "fasting_glucose": float(request.form.get("fasting_glucose", 0)),
-        "hba1c": float(request.form.get("hba1c", 0)),
-        "cholesterol": float(request.form.get("cholesterol", 0)),
-        "bmi": float(request.form.get("bmi", 0)),
-        "kidney_function": float(request.form.get("kidney_function", 0)),
-        "smoking_status": request.form.get("smoking_status", "no").lower(),
-        "family_history_cancer": request.form.get("family_history_cancer", "no").lower(),
-        "air_pollution_exposure": request.form.get("air_pollution_exposure", "no").lower(),
-        "immunization_status": request.form.get("immunization_status", "yes").lower(),
-    }
-    at_risk, possibly_at_risk, not_detected = detect_diseases(health_data)
+    # Collect user input from the form
+    age = int(request.form['age'])
+    systolic_bp = int(request.form['systolic_bp'])
+    diastolic_bp = int(request.form['diastolic_bp'])
+    fasting_glucose = float(request.form['fasting_glucose'])
+    hba1c = float(request.form['hba1c'])
+    cholesterol = int(request.form['cholesterol'])
+    bmi = float(request.form['bmi'])
+    kidney_function = int(request.form['kidney_function'])
+    smoking_status = request.form['smoking_status']
+    family_history_cancer = request.form['family_history_cancer']
+    air_pollution_exposure = request.form['air_pollution_exposure']
+    immunization_status = request.form['immunization_status']
 
-    # Format data for rendering
-    table = []
-    for disease in at_risk:
-        table.append([disease, "At Risk"])
-    for disease in possibly_at_risk:
-        table.append([disease, "Possibly At Risk"])
-    for disease in not_detected:
-        table.append([disease, "Not Detected"])
+    # Diseases list with rules for risk calculation
+    diseases = [
+        {"Disease": "Heart disease", "Status": calculate_heart_disease_risk(age, systolic_bp, diastolic_bp, cholesterol, smoking_status)},
+        {"Disease": "Cancer", "Status": calculate_cancer_risk(age, family_history_cancer, smoking_status)},
+        {"Disease": "Chronic lower respiratory diseases", "Status": calculate_respiratory_risk(smoking_status, age, air_pollution_exposure)},
+        {"Disease": "Stroke", "Status": calculate_stroke_risk(systolic_bp, diastolic_bp, age)},
+        {"Disease": "Alzheimer's disease", "Status": calculate_alzheimer_risk(age, kidney_function)},
+        {"Disease": "Diabetes", "Status": calculate_diabetes_risk(fasting_glucose, hba1c, age)},
+        {"Disease": "Kidney disease", "Status": calculate_kidney_risk(kidney_function, age)},
+        {"Disease": "Flu and pneumonia", "Status": calculate_flu_risk(immunization_status, age)},
+        {"Disease": "Liver disease", "Status": calculate_liver_disease_risk(bmi, alcohol_use="no")},  # Modify as needed
+        {"Disease": "Blood poisoning", "Status": calculate_blood_poisoning_risk(family_history_cancer, age)},
+        {"Disease": "Cardiovascular disease", "Status": calculate_cardiovascular_risk(age, systolic_bp, diastolic_bp, cholesterol)},
+        {"Disease": "Respiratory infections", "Status": calculate_respiratory_infection_risk(smoking_status, age)},
+        {"Disease": "Chronic obstructive pulmonary disease (COPD)", "Status": calculate_copd_risk(smoking_status, age)},
+        {"Disease": "Arthritis", "Status": calculate_arthritis_risk(age, bmi)},
+    ]
 
-    return render_template('result.html', table=table)
+    # Sort diseases by risk status: "At Risk" first, "Possibly at Risk" second, and "Not Detected" last
+    risk_order = {"At Risk": 0, "Possibly at Risk": 1, "Not Detected": 2}
+    diseases.sort(key=lambda x: risk_order.get(x["Status"], 2))  # Sort by the numerical value of the risk status
 
-# Run the app
-if __name__ == "__main__":
+    return render_template('result.html', table=diseases)
+
+
+# Risk Calculation Functions
+def calculate_heart_disease_risk(age, systolic_bp, diastolic_bp, cholesterol, smoking_status):
+    if age > 60 or systolic_bp > 160 or diastolic_bp > 100 or cholesterol > 240 or smoking_status == "yes":
+        return "At Risk"
+    elif age > 45 or (systolic_bp > 140 or diastolic_bp > 90) or cholesterol > 200:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_cancer_risk(age, family_history, smoking_status):
+    if family_history == "yes" or smoking_status == "yes" or age > 50:
+        return "At Risk"
+    elif age > 40 or smoking_status == "yes":
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_respiratory_risk(smoking_status, age, air_pollution_exposure):
+    if smoking_status == "yes" or age > 60 or air_pollution_exposure == "yes":
+        return "At Risk"
+    elif age > 45 or smoking_status == "yes":
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_stroke_risk(systolic_bp, diastolic_bp, age):
+    if systolic_bp > 160 or diastolic_bp > 100 or age > 70:
+        return "At Risk"
+    elif systolic_bp > 140 or diastolic_bp > 90:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_alzheimer_risk(age, kidney_function):
+    if age > 70 or kidney_function < 60:
+        return "At Risk"
+    elif age > 65 or kidney_function < 70:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_diabetes_risk(fasting_glucose, hba1c, age):
+    if fasting_glucose > 125 or hba1c > 6.5 or age > 50:
+        return "At Risk"
+    elif fasting_glucose > 100 or hba1c > 5.7:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_kidney_risk(kidney_function, age):
+    if kidney_function < 60 or age > 65:
+        return "At Risk"
+    elif kidney_function < 75 or age > 50:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_flu_risk(immunization_status, age):
+    if immunization_status == "no" or age > 65:
+        return "At Risk"
+    elif age > 50:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_liver_disease_risk(bmi, alcohol_use):
+    if bmi > 30 or alcohol_use == "yes":
+        return "At Risk"
+    elif bmi > 25 or alcohol_use == "no":
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_blood_poisoning_risk(family_history_cancer, age):
+    if family_history_cancer == "yes" or age > 60:
+        return "At Risk"
+    elif family_history_cancer == "yes":
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_cardiovascular_risk(age, systolic_bp, diastolic_bp, cholesterol):
+    if age > 50 or systolic_bp > 160 or diastolic_bp > 100 or cholesterol > 240:
+        return "At Risk"
+    elif age > 45 or systolic_bp > 140 or diastolic_bp > 90 or cholesterol > 200:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_respiratory_infection_risk(smoking_status, age):
+    if smoking_status == "yes" or age > 65:
+        return "At Risk"
+    elif age > 50:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_copd_risk(smoking_status, age):
+    if smoking_status == "yes" or age > 60:
+        return "At Risk"
+    elif smoking_status == "yes":
+        return "Possibly at Risk"
+    return "Not Detected"
+
+def calculate_arthritis_risk(age, bmi):
+    if age > 60 or bmi > 30:
+        return "At Risk"
+    elif age > 50 or bmi > 25:
+        return "Possibly at Risk"
+    return "Not Detected"
+
+
+if __name__ == '__main__':
     app.run(debug=True)
