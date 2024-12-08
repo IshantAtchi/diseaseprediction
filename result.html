@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Risk Assessment Results</title>
+    <title>Your Assessment Results</title>
+    <link rel="icon" href="{{ url_for('static', filename='image.png') }}" type="image/png">
     <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 0;
-            background-color: #f4f4f9;
-            color: #333;
+            padding: 20px;
+            background-color: #f4f7fb;
         }
+
         header {
             background: linear-gradient(90deg, #36d1dc, #5b86e5); /* Light blue to darker blue */
             color: #fff;
             padding: 20px;
-            text-align: center;
+            text-align: left;
+            position: relative;
         }
         header img {
             float: left;
@@ -25,73 +27,78 @@
             height: auto;
             margin-top: 5px; /* Adjust the vertical alignment */
         }
-        main {
-            max-width: 800px;
-            margin: 30px auto;
-            padding: 20px;
-            background-color: #fff;
-            border-radius: 8px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        }
         h1 {
             text-align: center;
             color: #fff;
         }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
+            margin-bottom: 30px;
         }
+
         th, td {
-            padding: 12px;
+            padding: 10px;
+            border: 1px solid #ccc;
             text-align: left;
-            border: 1px solid #ddd;
         }
+
         th {
-            background: linear-gradient(90deg, #36d1dc, #5b86e5); /* Light blue to darker blue */
+            background-color: #4a90e2;
             color: white;
         }
-        tr:nth-child(even) {
+
+        td {
             background-color: #f9f9f9;
         }
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 10px 20px;
-            background: linear-gradient(90deg, #36d1dc, #5b86e5); /* Light blue to darker blue */
-            color: white;
-            text-decoration: none;
-            border-radius: 4px;
-            text-align: center;
+
+        tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
         }
-        a:hover {
-            background-color: #0056b3;
+
+        h2 {
+            color: #4a90e2;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
     <header>
         <!-- Use url_for to reference image in static folder -->
-        <h1>Disease Risk Assessment Result</h1>
+        <h1>Disease Risk Assessment</h1>
     </header>
-    <main>
+
+    <div class="container">
+        <h1>Your Assessment Results</h1>
+
+        <!-- Health Risk Assessment Table -->
+        <h2>Health Risk Assessment</h2>
         <table>
             <thead>
                 <tr>
                     <th>Disease</th>
-                    <th>Risk Level</th>
+                    <th>Status</th>
                 </tr>
             </thead>
             <tbody>
                 {% for row in table %}
                 <tr>
-                    <td>{{ row[0] }}</td>
-                    <td>{{ row[1] }}</td>
+                    <td>{{ row['Disease'] }}</td>
+                    <td>{{ row['Status'] }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
-        <a href="/">Go Back</a>
-    </main>
+    </div>
 </body>
 </html>
