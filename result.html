@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk Assessment Results</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f9;
+            color: #333;
+        }
+        header {
+            background: linear-gradient(90deg, #36d1dc, #5b86e5); /* Light blue to darker blue */
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+        }
+        header img {
+            float: left;
+            margin-left: 20px; /* Adds space from the left side */
+            max-width: 100px; /* Set the size of the image */
+            height: auto;
+            margin-top: 5px; /* Adjust the vertical alignment */
+        }
+        main {
+            max-width: 800px;
+            margin: 30px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        th {
+            background: linear-gradient(90deg, #36d1dc, #5b86e5); /* Light blue to darker blue */
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: linear-gradient(90deg, #36d1dc, #5b86e5); /* Light blue to darker blue */
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <!-- Use url_for to reference image in static folder -->
+        <img src="{{ url_for('static', filename='image.png') }}" alt="Disease Risk Assessment Logo">
+        <h1>Disease Risk Assessment Result</h1>
+    </header>
+    <main>
+        <table>
+            <thead>
+                <tr>
+                    <th>Disease</th>
+                    <th>Risk Level</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in table %}
+                <tr>
+                    <td>{{ row[0] }}</td>
+                    <td>{{ row[1] }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <a href="/">Go Back</a>
+    </main>
+</body>
+</html>
